@@ -1,3 +1,4 @@
+const Post = require("./models/Post");
 const User = require("./models/User");
 const express = require("express");
 require("dotenv").config();
@@ -49,11 +50,49 @@ app.post('/login', async (req, res) => {
         }
 
         res.send('Login successful');
-    
+
     } catch (error) {
         res.status(500).send(error.message);
     }
-})
+});
+
+app.post('/posts', async (req, res) => {
+    try {
+        const { content, author } = req.body;
+        const post = new Post({
+            content,
+            author
+        });
+
+        await post.save();
+        res.status(201).send('Post created');
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+});
+
+app.get('/posts', async (req, res) => {
+    try {
+        const posts = await Post.find();
+        res.json(posts);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+app.delete('/posts/:id', async (req, res) => {
+    try {
+        const deletedPost = await Post.findByIdAndDelete(req.params.id);
+
+        if (!deletedPost) {
+            return res.status(404).send('Post not found');
+        }
+
+        res.send('Post deleted');
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
