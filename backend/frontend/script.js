@@ -3,7 +3,7 @@ const postContainer = document.getElementById('postContainer');
 
 //Load Posts
 async function loadPosts() {
-    const response =await fetch('http://localhost:300/posts');
+    const response = await fetch('http://localhost:3000/posts');
     const posts = await response.json();
 
     postContainer.innerHTML = '';

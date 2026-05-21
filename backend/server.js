@@ -1,3 +1,4 @@
+const path = require("path");
 const Post = require("./models/Post");
 const User = require("./models/User");
 const cors = require("cors");
@@ -15,9 +16,10 @@ const port = 3000;
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 app.get("/", (req, res) => {
-    res.send("Hello, World!");
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
 app.post("/register", async (req, res) => {
