@@ -94,6 +94,23 @@ app.delete('/posts/:id', async (req, res) => {
     }
 });
 
+app.put('/posts/:id', async (req, res) => {
+    try {
+        const { content } = req.body;
+        const updatedPost = await Post.findByIdAndUpdate(
+            req.params.id,
+            { content },
+            { new: true }
+        );
+        if (!updatedPost) {
+            return res.status(404).send('Post not found');
+        }
+        res.json(updatedPost);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
