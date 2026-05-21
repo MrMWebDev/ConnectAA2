@@ -3,7 +3,7 @@ const postContainer = document.getElementById('postContainer');
 
 //Load Posts
 async function loadPosts() {
-    const response = await fetch('http://localhost:3000/posts');
+    const response = await fetch(`/posts`);
     const posts = await response.json();
 
     postContainer.innerHTML = '';
@@ -15,11 +15,59 @@ async function loadPosts() {
         
         postElement.innerHTML = `
             <h3>${post.author}</h3>
-            <p>${post.content}</p>
+            <p id="content-${post._id}">${post.content}</p>
+            <small>${new Date(post.createdAt).toLocaleString()}</small>
+            <p>❤️ ${post.likes}</p>
+
+            <button onclick="likePost('${post._id}')">
+                Like
+            </button>
+
+            <button onclick="deletePost('${post._id}')">
+                Delete
+            </button>
+
+            <button onclick="editPost('${post._id}', '${post.content}')">
+                Edit
+            </button>
         `;
 
         postContainer.appendChild(postElement);
     });
+};
+
+//Delete Post
+async function deletePost(id) {
+    await fetch(`/posts/${id}`, {
+        method: 'DELETE'
+    });
+
+    loadPosts();
+};
+
+//Edit Post
+async function editPost(id, currentContent) {
+    const newContent = prompt('Edit your post:', currentContent);
+    if (!newContent) return;
+
+    await fetch(`/posts/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({ content: newContent })
+    });
+    
+    loadPosts();
+};
+
+async function likePost(id) {
+    await fetch(`/posts/${id}/like`, {
+        method: 'POST'
+    });
+
+    loadPosts();
 }
 
 //Create Post
@@ -29,7 +77,7 @@ postForm.addEventListener('submit', async (e) => {
     const author = document.getElementById('author').value;
     const content = document.getElementById('content').value;
 
-    await fetch('http://localhost:3000/posts', {
+    await fetch('/posts', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -43,6 +91,8 @@ postForm.addEventListener('submit', async (e) => {
     postForm.reset();
 
     loadPosts();
+
+    alert('Post created successfuly!');
 });
 
 //Load Posts when page opens

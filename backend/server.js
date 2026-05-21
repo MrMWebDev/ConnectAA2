@@ -77,7 +77,7 @@ app.post('/posts', async (req, res) => {
 
 app.get('/posts', async (req, res) => {
     try {
-        const posts = await Post.find();
+        const posts = await Post.find().sort({ createdAt: -1 });
         res.json(posts);
     } catch (error) {
         res.status(500).send(error.message);
@@ -112,6 +112,21 @@ app.put('/posts/:id', async (req, res) => {
         res.json(updatedPost);
     } catch (error) {
         res.status(500).send(error.message);
+    }
+});
+
+app.post('/posts/:id/like', async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) {
+            return res.status(404).send('Post not found');
+        }
+
+        post.likes += 1;
+        await post.save();
+        res.json(post);
+    } catch (error) {
+        res.status(500).sendStatus(error.message);
     }
 });
 
