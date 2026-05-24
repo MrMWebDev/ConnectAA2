@@ -1,4 +1,6 @@
 const path = require("path");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const Post = require("./models/Post");
 const User = require("./models/User");
 const cors = require("cors");
