@@ -1,12 +1,21 @@
-const path = require("path");
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const Post = require("./models/Post");
 const User = require("./models/User");
-const cors = require("cors");
+
+const auth = require("./middleware/auth");
+
 const express = require("express");
+
+const bcrypt = require('bcrypt');
+
+const jwt = require('jsonwebtoken');
+
 require("dotenv").config();
+
 const mongoose = require("mongoose");
+
+const cors = require("cors");
+
+const path = require("path");
 
 mongoose
     .connect(process.env.MONGO_URI)
@@ -31,12 +40,13 @@ app.post("/register", async (req, res) => {
         const user = new User({
             username,
             email,
-            password,
+            password: password,
         });
 
         await user.save();
 
         res.status(201).send("User created");
+
     } catch (error) {
         res.status(500).send(error.message);
     }
@@ -51,23 +61,33 @@ app.post('/login', async (req, res) => {
             return res.status(404).send('User not found');
         }
 
-        if (user.password !== password) {
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
             return res.status(401).send('Incorrect password');
         }
 
-        res.send('Login successful');
+        const token = jwt.sign(
+            { userId: user._id },
+
+            process.env.JWT_SECRET,
+
+            { expiresIn: '1h' }
+        );
+
+        res.json({ message: 'Login successful', token });
 
     } catch (error) {
         res.status(500).send(error.message);
     }
 });
 
-app.post('/posts', async (req, res) => {
+app.post('/posts', auth, async (req, res) => {
     try {
-        const { content, author } = req.body;
+        const { content } = req.body;
+
         const post = new Post({
             content,
-            author
+            author: req.user.userId
         });
 
         await post.save();
@@ -128,7 +148,7 @@ app.post('/posts/:id/like', async (req, res) => {
         await post.save();
         res.json(post);
     } catch (error) {
-        res.status(500).sendStatus(error.message);
+        res.status(500).send(error.message);
     }
 });
 

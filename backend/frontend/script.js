@@ -92,7 +92,7 @@ postForm.addEventListener('submit', async (e) => {
 
     loadPosts();
 
-    alert('Post created successfuly!');
+    alert('Post created successfully!');
 });
 
 //Load Posts when page opens
