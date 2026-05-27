@@ -1,5 +1,6 @@
 const Post = require("./models/Post");
 const User = require("./models/User");
+const Comment = require('./models/Comment');
 
 const auth = require("./middleware/auth");
 
@@ -58,12 +59,12 @@ app.post('/login', async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(404).send('User not found');
+            return res.status(404).json({ message: 'User not found' });
         }
 
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            return res.status(401).send('Incorrect password');
+            return res.status(401).json({ message: 'Incorrect password' });
         }
 
         const token = jwt.sign(
@@ -99,7 +100,7 @@ app.post('/posts', auth, async (req, res) => {
 
 app.get('/posts', async (req, res) => {
     try {
-        const posts = await Post.find().sort({ createdAt: -1 });
+        const posts = await Post.find().populate('author', 'username').sort({ createdAt: -1 });
         res.json(posts);
     } catch (error) {
         res.status(500).send(error.message);
@@ -126,7 +127,7 @@ app.put('/posts/:id', async (req, res) => {
         const updatedPost = await Post.findByIdAndUpdate(
             req.params.id,
             { content },
-            { new: true }
+            { returnDocument: 'after' }
         );
         if (!updatedPost) {
             return res.status(404).send('Post not found');
@@ -134,6 +135,35 @@ app.put('/posts/:id', async (req, res) => {
         res.json(updatedPost);
     } catch (error) {
         res.status(500).send(error.message);
+    }
+});
+
+app.post('/posts/:id/comments', auth, async (req, res) => {
+    try {
+        const { content } = req.body;
+        
+        const comment = new Comment({
+            content,
+            author: req.user.userId,
+            post: req.params.id
+        });
+        await comment.save();
+        res.status(201).send('Comment created')
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+app.get('/posts/:id/comments', async (req,res) => {
+    try {
+        const comments = await Comment.find({ post: req.params.id })
+        .populate('author', 'username')
+        .sort({ createdAt: -1 });
+
+        res.json(comments);
+    } catch (error) {
+        res.status(500).send(error.message);
+
     }
 });
 
